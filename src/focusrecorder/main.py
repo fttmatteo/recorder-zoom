@@ -36,7 +36,7 @@ class FocusApp(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("FocusSee Control Panel")
+        self.setWindowTitle("Video Recorder Control Panel")
         self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.setMinimumWidth(320)
         self.setMaximumWidth(320)

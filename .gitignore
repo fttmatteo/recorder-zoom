@@ -33,3 +33,8 @@ build/
 
 # Videos grabados
 videos/
+
+.briefcase/
+*.dist-info/
+build/
+dist/
