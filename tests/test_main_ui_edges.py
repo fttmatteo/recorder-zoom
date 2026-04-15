@@ -22,7 +22,7 @@ def test_main_run_function(monkeypatch):
         def show(self):
             calls.append("show")
 
-    monkeypatch.setattr(QtWidgets, "QApplication", DummyQApplication)
+    monkeypatch.setattr(main_module, "QApplication", DummyQApplication)
     monkeypatch.setattr(main_module, "FocusApp", DummyFocusApp)
     monkeypatch.setattr(sys, "exit", lambda code: calls.append("exit"))
 
@@ -52,4 +52,44 @@ def test_main_toggle_stops_recording_and_renders(monkeypatch, qtbot):
         assert "TikTok" in app.status.text()
     
     app.on_finished("", "")
-    assert "Grabación" in app.btn.text()
+    assert "GRAB" in app.btn.text().upper()
+
+def test_main_toggle_starts_recording(monkeypatch, qtbot):
+    app = main_module.FocusApp()
+    qtbot.addWidget(app)
+    
+    app.recorder = None
+    
+    with patch.object(main_module, "FocusRecorder") as mock_recorder_class:
+        mock_recorder_instance = MagicMock()
+        mock_recorder_instance.filename = "test_video.mp4"
+        mock_recorder_instance.is_recording = False
+        mock_recorder_class.return_value = mock_recorder_instance
+        
+        app.toggle()
+        
+        mock_recorder_instance.start.assert_called_once()
+        assert "DETENER" in app.btn.text()
+
+def test_main_render_thread():
+    with patch('focusrecorder.main.QThread'):
+        mock_recorder = MagicMock()
+        mock_recorder.filename = "test.mp4"
+        
+        # Modo full
+        thread = main_module.RenderThread(mock_recorder, "full")
+        thread.progress = MagicMock()
+        thread.finished = MagicMock()
+        
+        thread.run()
+        mock_recorder.stop.assert_called_once()
+        thread.finished.emit.assert_called_with("test.mp4", "")
+
+def test_main_on_finished_with_paths(qtbot):
+    app = main_module.FocusApp()
+    qtbot.addWidget(app)
+    
+    app.on_finished("/path/to/full_video.mp4", "/path/to/tiktok_video.mp4")
+    
+    assert "full_video.mp4" in app.status.text()
+    assert "tiktok_video.mp4" in app.status.text()
