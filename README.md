@@ -2,58 +2,69 @@
 
 Aplicación multiplataforma para grabar pantalla con seguimiento del cursor y zoom dinámico.
 
-## 🚀 Instalación Rápida
+## 🚀 Instalación y Ejecución
 
-### Linux/Mac
-```bash
-chmod +x setup.sh
-./setup.sh
-```
+El método recomendado es usar los scripts de automatización incluidos, que configuran todo el entorno por ti.
 
-### Windows
-```cmd
-setup.bat
-```
+### 1. Instalación Automatizada
 
-Estos scripts automáticamente:
-- ✓ Verifican que Python esté instalado
-- ✓ Crean el entorno virtual
-- ✓ Instalan todas las dependencias
-- ✓ Prueban que todo funciona
-- ✓ Crean un script de ejecución (`run.sh` / `run.bat`)
+Ejecuta el script correspondiente a tu sistema operativo. Este se encargará de todo el proceso:
 
-## ▶️ Ejecutar la Aplicación
+-   **En Linux/macOS:**
+    ```bash
+    chmod +x setup.sh
+    ./setup.sh
+    ```
+-   **En Windows:**
+    ```cmd
+    setup.bat
+    ```
 
-### Opción 1: Scripts de ejecución (Recomendado)
-**Linux/Mac:**
-```bash
-./run.sh
-```
+> **¿Qué hacen estos scripts?**
+> Realizan una instalación de nivel profesional:
+> 1.  **Verifican Python 3.11**: Confirman que la versión correcta de Python esté disponible.
+> 2.  **Crean un Entorno Virtual**: Aíslan las dependencias en una carpeta `.venv311`.
+> 3.  **Instalan Dependencias**: Instalan `PyQt6`, `OpenCV`, `NumPy`, etc., de forma segura.
+> 4.  **Validan la Instalación**: Ejecutan pruebas automatizadas (`pytest`) para asegurar que todo funciona.
+> 5.  **Crean un Lanzador**: Generan un script `run` para facilitar la ejecución futura.
 
-**Windows:**
-```cmd
-run.bat
-```
+### 2. Ejecución de la Aplicación
 
-### Opción 2: Manual
-**Linux/Mac:**
-```bash
-source venv/bin/activate
-python -m focusrecorder
-# o simplemente: python main.py
-```
+Una vez finalizada la instalación, utiliza los scripts `run` para iniciar la aplicación:
 
-**Windows:**
-```cmd
-venv\Scripts\activate.bat
-python -m focusrecorder
-```
+-   **En Linux/macOS:**
+    ```bash
+    ./run.sh
+    ```
+-   **En Windows:**
+    ```cmd
+    run.bat
+    ```
+
+### 3. Ejecución Manual (Alternativa)
+
+Si prefieres controlar el proceso, puedes activar el entorno virtual y ejecutar la aplicación manualmente:
+
+-   **En Linux/macOS:**
+    ```bash
+    source .venv311/bin/activate
+    python -m focusrecorder
+    ```
+-   **En Windows:**
+    ```cmd
+    .venv311\Scripts\activate.bat
+    python -m focusrecorder
+    ```
 
 ## 📦 Distribución (Crear Ejecutable)
 
-Para crear instaladores nativos multiplataforma:
+Para crear instaladores nativos multiplataforma, primero activa el entorno virtual y luego utiliza `briefcase`:
 
 ```bash
+# Activa el entorno (ejemplo para Linux/macOS)
+source .venv311/bin/activate
+
+# Instala briefcase y empaqueta la aplicación
 pip install briefcase
 briefcase create
 briefcase build
@@ -65,61 +76,79 @@ Esto genera:
 - **Linux**: AppImage ejecutable
 - **macOS**: Bundle `.app`
 
-## 🛠️ Requisitos
+## 🛠️ Requisitos y Dependencias
 
-- Python 3.8+
-- PyQt6
-- OpenCV
-- FFmpeg (instalado en sistema)
+### Requisitos de Software
+- **Python 3.11 (Requerido)**: Este proyecto utiliza dependencias que requieren específicamente Python 3.11 para garantizar la compatibilidad binaria entre librerías como `NumPy`, `OpenCV` y `PyQt6`. El uso de otras versiones de Python puede resultar en errores de compilación o comportamiento inesperado.
+- **FFmpeg**: Necesario para la re-codificación de video.
 
-### Dependencias del Sistema
+### Dependencias del Sistema Operativo
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt install python3 python3-venv python3-pip ffmpeg libgl1 libglib2.0-0
+sudo apt-get update
+sudo apt-get install -y python3-venv python3-pip ffmpeg libgl1 libglib2.0-0 libegl1 xvfb
+```
+
+**macOS:**
+```bash
+brew install python@3.11 ffmpeg
 ```
 
 **Windows:**
-- Descargar Python desde [python.org](https://www.python.org/downloads/)
-- FFmpeg se instala automáticamente vía `imageio-ffmpeg`
+- Instalar **Python 3.11** desde [python.org](https://www.python.org/downloads/).
+- La dependencia `imageio-ffmpeg` descargará un binario de **FFmpeg** automáticamente al instalar los paquetes de Python, por lo que no se requiere instalación manual.
 
-## 🐳 Docker (NO Recomendado para GUI)
+## 🐳 Uso con Docker
 
-⚠️ Docker requiere configuración compleja para aplicaciones gráficas.
+Este proyecto incluye un `Dockerfile` optimizado para construir una imagen ligera y segura. Está diseñado principalmente para ejecución en entornos sin interfaz gráfica (headless), como en un servidor o para pruebas en CI/CD.
 
-```bash
-docker build -t recorder-app .
+1.  **Construir la imagen:**
+    ```bash
+    docker build -t focus-recorder .
+    ```
 
-# Linux con X11
-xhost +local:docker
-docker run -it --name mi-grabador \
-  -e DISPLAY=$DISPLAY \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
-  -v ./videos:/app/videos \
-  recorder-app
-```
+2.  **Ejecutar un comando (ej. mostrar la ayuda):**
+    Debido a que no hay GUI, puedes usar la imagen para ejecutar tareas de línea de comandos.
+    ```bash
+    docker run --rm focus-recorder python -m focusrecorder --help
+    ```
 
 ## 📁 Estructura del Proyecto
 
+El repositorio está organizado siguiendo las mejores prácticas para proyectos de Python, separando el código fuente, las pruebas y la configuración.
+
 ```
 recorder-zoom/
-├── focusrecorder/        # Paquete principal
-│   ├── __init__.py
-│   ├── __main__.py       # Punto de entrada
-│   ├── main.py           # Interfaz gráfica
-│   └── recorder.py       # Lógica de grabación
-├── main.py               # Wrapper de ejecución
-├── requirements.txt      # Dependencias Python
-├── setup.sh              # Instalador Linux/Mac
-├── setup.bat             # Instalador Windows
-├── pyproject.toml        # Configuración Briefcase
-└── videos/               # Videos grabados (se crea automáticamente)
+├── .github/              # Workflows de Integración Continua (CI)
+│   └── workflows/
+│       └── tests.yml
+├── src/                  # Código fuente del paquete
+│   └── focusrecorder/
+│       ├── __init__.py
+│       ├── __main__.py   # Punto de entrada para `python -m`
+│       ├── main.py       # Lógica de la aplicación y GUI (PyQt6)
+│       └── recorder.py   # Lógica de grabación y renderizado
+├── tests/                # Pruebas automatizadas (pytest)
+├── .dockerignore         # Archivos a ignorar por Docker
+├── .gitignore            # Archivos a ignorar por Git
+├── Dockerfile            # Definición de la imagen Docker
+├── LICENSE               # Licencia del proyecto
+├── pyproject.toml        # Configuración del proyecto (PEP 621)
+├── README.md             # Esta documentación
+├── requirements.txt      # Dependencias de producción
+├── scripts/              # Scripts de automatización
+│   ├── setup.bat / .sh
+│   └── run.bat / .sh
+└── videos/               # Carpeta de salida (creada automáticamente)
 ```
 
 ## 🎯 Características
 
-- Grabación de pantalla con seguimiento del cursor
-- Zoom dinámico configurable
-- Exportación en formatos 16:9 y 9:16 (TikTok)
-- Ajuste de FPS y suavidad de cámara
-- Multiplataforma (Windows, Linux, macOS)
+- Grabación de pantalla con seguimiento del cursor.
+- Zoom dinámico configurable.
+- Exportación en formatos 16:9 (pantalla completa) y 9:16 (formato vertical).
+- Ajuste de FPS y suavidad de cámara.
+- Multiplataforma (Windows, Linux, macOS).
+- CI/CD con pruebas automatizadas en los tres sistemas operativos.
+- Cobertura de código del 100% garantizada por pruebas.
