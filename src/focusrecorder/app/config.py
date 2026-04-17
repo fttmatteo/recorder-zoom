@@ -10,7 +10,7 @@ class AppConfig:
 
 
 def get_default_output_dir() -> Path:
-    return Path(__file__).resolve().parents[4] / "videos"
+    return Path.home() / "Desktop" / "videos"
 
 
 def get_default_recording_settings() -> RecordingSettings:
