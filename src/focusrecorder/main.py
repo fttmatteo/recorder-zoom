@@ -167,6 +167,17 @@ class FocusApp(QWidget):
 
         self.setLayout(layout)
         self.adjustSize()
+        self._center_on_screen()
+
+    def _center_on_screen(self):
+        """Centra la ventana en la pantalla."""
+        screen = QApplication.primaryScreen()
+        if screen:
+            screen_geometry = screen.availableGeometry()
+            window_geometry = self.frameGeometry()
+            center_point = screen_geometry.center()
+            window_geometry.moveCenter(center_point)
+            self.move(window_geometry.topLeft())
 
     def _get_video_directory_display(self):
         """Obtiene la ruta de videos para mostrar en la UI"""
