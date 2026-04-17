@@ -45,12 +45,12 @@ brew install python@3.11 ffmpeg
 ### Instalación Rápida
 Ejecuta el script correspondiente a tu sistema operativo para configurar todo automáticamente:
 
-- **Linux / macOS**:
+**Linux / macOS**:
   ```bash
   chmod +x setup.sh
   ./setup.sh
   ```
-- **Windows**:
+**Windows**:
   ```cmd
   setup.bat
   ```
