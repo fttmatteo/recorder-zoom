@@ -12,7 +12,7 @@ from .constants import (
     DEFAULT_EXPORT_MODE,
     DEFAULT_OUTPUT_FOLDER_NAME,
 )
-from ..utils.system_paths import get_config_directory
+from ..infrastructure.system.platform_paths import get_config_directory
 
 
 def get_config_file_path() -> Path:

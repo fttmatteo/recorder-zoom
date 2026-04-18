@@ -11,8 +11,8 @@ from ...config.settings import UISettings, UserPreferences
 from ...application.dto import StopRecordingResult
 from ...application.use_cases.start_recording import StartRecordingUseCase
 from ...application.use_cases.stop_recording import StopRecordingUseCase
-from ...utils.file_utils import open_folder_in_explorer
-from ...utils.ui_conversions import (
+from ...infrastructure.system.file_explorer import open_folder_in_explorer
+from .ui_conversions import (
     recording_suavidad_to_ui,
     recording_zoom_to_ui,
     ui_suavidad_to_recording,

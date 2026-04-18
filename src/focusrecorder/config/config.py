@@ -9,7 +9,7 @@ from .constants import (
     DEFAULT_FPS,
     DEFAULT_EXPORT_MODE,
 )
-from ..utils.system_paths import get_default_output_dir
+from ..infrastructure.system.platform_paths import get_default_output_dir
 
 
 @dataclass(frozen=True)
@@ -82,3 +82,26 @@ def with_recording_overrides(
     if fps is not None:
         updates["fps"] = fps
     return replace(settings, **updates)
+
+
+def coerce_recording_settings(config) -> RecordingSettings:
+    if config is None:
+        return get_default_recording_settings()
+
+    if isinstance(config, RecordingSettings):
+        return config
+
+    if isinstance(config, dict):
+        settings = get_default_recording_settings()
+        updates = {}
+        if "zoom" in config:
+            updates["zoom"] = config["zoom"]
+        if "suavidad" in config:
+            updates["suavidad"] = config["suavidad"]
+        if "fps" in config:
+            updates["fps"] = config["fps"]
+        if "output_dir" in config:
+            updates["output_dir"] = Path(config["output_dir"])
+        return replace(settings, **updates)
+
+    raise TypeError("config must be None, a dict, or RecordingSettings")

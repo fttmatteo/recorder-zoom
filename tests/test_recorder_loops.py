@@ -13,24 +13,15 @@ def test_recorder_start_and_stop(monkeypatch, tmp_path):
     rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 30})
     rec.capture_backend = MagicMock()
 
-    class MockListener:
-        def __init__(self, on_click=None):
-            self.on_click = on_click
-            self.started_flag = False
-            self.stopped_flag = False
-        def start(self): 
-            self.started_flag = True
-        def stop(self):
-            self.stopped_flag = True
-
-    monkeypatch.setattr(recorder_module.mouse, "Listener", MockListener)
+    mock_mouse_provider = MagicMock()
+    rec.mouse_provider = mock_mouse_provider
 
     monkeypatch.setattr(rec, "_render_adaptive_video", lambda *args, **kwargs: None)
     monkeypatch.setattr(rec, "_record_loop", lambda: None)
     
     rec.start()
     assert rec.is_recording
-    assert rec.listener.started_flag
+    mock_mouse_provider.start_listener.assert_called_once()
 
     rec._on_click(10, 10, None, True)
     assert rec.is_clicking is True
@@ -39,7 +30,7 @@ def test_recorder_start_and_stop(monkeypatch, tmp_path):
 
     rec.stop()
     assert not rec.is_recording
-    assert rec.listener.stopped_flag
+    mock_mouse_provider.stop_listener.assert_called_once()
 
 
 
@@ -62,8 +53,8 @@ def test_record_loop_windows_branch(monkeypatch, tmp_path):
         
     mock_backend.capture_frame.side_effect = get_frame
     rec.capture_backend = mock_backend
-    
-    monkeypatch.setattr(recorder_module.mouse, "Controller", MagicMock)
+    rec.mouse_provider = MagicMock()
+    rec.mouse_provider.get_position.return_value = (0, 0)
     
     rec._record_loop()
     
@@ -87,12 +78,11 @@ def test_record_loop_linux_branch(monkeypatch, tmp_path):
             
     mock_backend.capture_frame.side_effect = get_frame
     rec.capture_backend = mock_backend
-    
-    monkeypatch.setattr(recorder_module.mouse, "Controller", MagicMock)
+    rec.mouse_provider = MagicMock()
+    rec.mouse_provider.get_position.return_value = (0, 0)
     monkeypatch.setattr(time, "sleep", lambda x: None)
 
     rec._record_loop()
     
     assert len(rec.raw_data) == 1
-
 
