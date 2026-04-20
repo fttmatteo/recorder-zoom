@@ -136,3 +136,91 @@ def test_recorder_stop_no_listener(monkeypatch, tmp_path):
     
     rec.stop(None, "full")
     rec._render_adaptive_video.assert_called_once()
+
+def test_renderer_synchronizes_low_framerate_to_target_fps(monkeypatch):
+    from focusrecorder.infrastructure.rendering.adaptive_renderer import AdaptiveVideoRenderer
+    from focusrecorder.config.settings import RecordingSettings
+    import focusrecorder.infrastructure.rendering.adaptive_renderer as renderer_module
+    
+    written_frames = []
+    class MockVideoWriter:
+        def __init__(self, filename, fourcc, fps, frameSize): pass
+        def write(self, frame): written_frames.append(frame)
+        def release(self): pass
+        
+    monkeypatch.setattr(cv2, "VideoWriter", MockVideoWriter)
+    monkeypatch.setattr(cv2, "VideoWriter_fourcc", lambda *args: "mp4v")
+    monkeypatch.setattr(renderer_module, "reencode_to_h264", lambda x: None)
+    
+    renderer = AdaptiveVideoRenderer()
+    settings = RecordingSettings(fps=30, zoom=2.0, suavidad=0.5, output_dir=".")
+    
+    blank_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    raw_data = [
+        (blank_frame, 320, 240, False, 0.0),
+        (blank_frame, 320, 240, True, 1.0),
+        (blank_frame, 100, 100, False, 2.0),
+    ]
+    
+    renderer.render(
+        raw_data=raw_data,
+        settings=settings,
+        screen_size=(640, 480),
+        output_filename="dummy.mp4",
+        export_mode="full"
+    )
+    
+    # 2.0s a 30fps debe generar 60 frames aunque solo haya 3 capturados
+    assert len(written_frames) == 60, f"Se esperaban 60 frames, se obtuvieron {len(written_frames)}"
+
+
+def test_renderer_from_file_synchronizes_low_framerate_to_target_fps(monkeypatch):
+    from focusrecorder.infrastructure.rendering.adaptive_renderer import AdaptiveVideoRenderer
+    from focusrecorder.config.settings import RecordingSettings
+    import focusrecorder.infrastructure.rendering.adaptive_renderer as renderer_module
+    
+    written_frames = []
+    class MockVideoWriter:
+        def __init__(self, filename, fourcc, fps, frameSize): pass
+        def write(self, frame): written_frames.append(frame)
+        def release(self): pass
+
+    blank_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    class MockVideoCapture:
+        def __init__(self, path):
+            self.frames = [blank_frame.copy(), blank_frame.copy(), blank_frame.copy()]
+            self.idx = 0
+        def read(self):
+            if self.idx < len(self.frames):
+                frame = self.frames[self.idx]
+                self.idx += 1
+                return True, frame
+            return False, None
+        def isOpened(self): return True
+        def release(self): pass
+
+    monkeypatch.setattr(cv2, "VideoWriter", MockVideoWriter)
+    monkeypatch.setattr(cv2, "VideoCapture", MockVideoCapture)
+    monkeypatch.setattr(cv2, "VideoWriter_fourcc", lambda *args: "mp4v")
+    monkeypatch.setattr(renderer_module, "reencode_to_h264", lambda x: None)
+    
+    renderer = AdaptiveVideoRenderer()
+    settings = RecordingSettings(fps=30, zoom=2.0, suavidad=0.5, output_dir=".")
+    
+    mouse_data = [
+        (320, 240, False, 0.0),
+        (320, 240, True, 1.25),
+        (100, 100, False, 2.5),
+    ]
+    
+    renderer.render_from_file(
+        temp_path="dummy.avi",
+        mouse_data=mouse_data,
+        settings=settings,
+        screen_size=(640, 480),
+        output_filename="dummy.mp4",
+        export_mode="full"
+    )
+    
+    # 2.5s a 30fps debe generar 75 frames 
+    assert len(written_frames) == 75, f"Se esperaban 75 frames, se obtuvieron {len(written_frames)}"
